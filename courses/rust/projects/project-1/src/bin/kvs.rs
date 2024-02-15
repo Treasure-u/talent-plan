@@ -32,15 +32,22 @@ fn main() {
         .get_matches();
 
     match matches.subcommand() {
-        ("set", Some(_matches)) => {
+        ("set", Some(matches)) => {
+            println!(
+                "KEY{:?}, VALUE{:?}",
+                matches.value_of("KEY").unwrap(),
+                matches.value_of("VALUE").unwrap()
+            );
             eprintln!("unimplemented");
             exit(1);
         }
         ("get", Some(_matches)) => {
+            // println!("KEY:{:?}", matches.value_of("KEY").unwrap());
             eprintln!("unimplemented");
             exit(1);
         }
         ("rm", Some(_matches)) => {
+            // println!("REOMVE KEY{:?}", matches.value_of("KEY").unwrap());
             eprintln!("unimplemented");
             exit(1);
         }
