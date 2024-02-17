@@ -1,7 +1,7 @@
 use failure::Fail;
 use std::io;
 
-/// Error type for kvs.
+/// kvs 的错误类型
 #[derive(Fail, Debug)]
 pub enum KvsError {
     /// IO error.
