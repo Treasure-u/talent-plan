@@ -154,6 +154,7 @@ impl KvStore {
 
         Ok((*versions.last().unwrap_or(&0), useless_size))
     }
+    
     /// Sets the value of a string key to a string.
     ///
     /// If the key already exists, the previous value will be overwritten.
@@ -229,14 +230,20 @@ impl KvStore {
     ///
     /// It propagates I/O or serialization errors during writing the log.
     pub fn remove(&mut self, key: String) -> Result<()> {
-        if self.index.contains_key(&key) {
-            let cmd = Command::remove(key);
-            serde_json::to_writer(&mut self.current_writer, &cmd)?;
+        if self.index.get(&key).is_some() {
+            self.useless_size += self.index.remove(&key).map(|cp| cp.length).unwrap_or(0);
+
+            let command = serde_json::to_vec(&Command::RM(key))?;
+            let offset = self.current_writer.get_position();
+            self.current_writer.write_all(&command)?;
             self.current_writer.flush()?;
-            if let Command::RM(key) = cmd {
-                let old_cmd = self.index.remove(&key).expect("key not found");
-                self.useless_size += old_cmd.length;
+
+            self.useless_size += self.current_writer.get_position() - offset;
+
+            if self.useless_size > MAX_USELESS_SIZE {
+                self.compact()?;
             }
+
             Ok(())
         } else {
             Err(KvsError::KeyNotFound)
@@ -282,6 +289,7 @@ impl KvStore {
 
         Ok(())
     }
+    
     /// Create a new log file with given generation number and add the reader to the readers map.
     ///
     /// Returns the writer to the log.
